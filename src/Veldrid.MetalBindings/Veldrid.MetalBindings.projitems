@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>79d71e93-b3ce-468f-87b9-8f491cb904e4</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Veldrid.MetalBindings</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Bool8.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CALayer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CAMetalDrawable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CAMetalLayer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CGFloat.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CGPoint.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CGRect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CGSize.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Dispatch.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FixedUtf8String.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLBlendFactor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLBlendOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLBlitCommandEncoder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLBuffer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLClearColor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLColorWriteMask.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLCommandBuffer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLCommandBufferHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLCommandBufferStatus.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLCommandQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLCompareFunction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLCompileOptions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLComputeCommandEncoder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLComputePipelineDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLComputePipelineState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLCPUCacheMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLCullMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLDataType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLDepthClipMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLDepthStencilDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLDepthStencilState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLDevice.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLFeatureSet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLFunction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLFunctionConstantValues.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLIndexType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLLanguageVersion.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLLibrary.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLLoadAction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLMutability.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLOrigin.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLPipelineBufferDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLPipelineBufferDescriptorArray.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLPixelFormat.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLPrimitiveType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLRegion.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLRenderCommandEncoder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLRenderPassColorAttachmentDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLRenderPassColorAttachmentDescriptorArray.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLRenderPassDepthAttachmentDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLRenderPassDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLRenderPassStencilAttachmentDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLRenderPipelineColorAttachmentDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLRenderPipelineColorAttachmentDescriptorArray.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLRenderPipelineDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLRenderPipelineState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLResourceOptions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLSamplerAddressMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLSamplerBorderColor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLSamplerDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLSamplerMinMagFilter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLSamplerMipFilter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLSamplerState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLScissorRect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLSize.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLStencilDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLStencilOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLStorageMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLStoreAction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLTexture.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLTextureDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLTextureType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLTextureUsage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLTriangleFillmode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLUtil.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLVertexAttributeDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLVertexAttributeDescriptorArray.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLVertexBufferLayoutDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLVertexBufferLayoutDescriptorArray.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLVertexDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLVertexFormat.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLVertexStepFunction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLViewport.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MTLWinding.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NSArray.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NSAutoreleasePool.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NSDictionary.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NSError.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NSObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NSRange.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NSString.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NSView.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NSWindow.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ObjCClass.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ObjectiveCMethod.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ObjectiveCRuntime.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Selector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Selectors.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UIScreen.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UIView.cs" />
+  </ItemGroup>
+</Project>
