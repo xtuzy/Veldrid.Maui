@@ -1,14 +1,15 @@
 ﻿using System;
-using Vulkan;
+//using Vulkan;
 using static Veldrid.Vk.VulkanUtil;
-using static Vulkan.VulkanNative;
-
+//using static Vulkan.VulkanNative;
+using Silk.NET.Vulkan;
+using Silk.NET.Vulkan.Extensions.KHR;
 namespace Veldrid.Vk
 {
     internal unsafe class VkBuffer : DeviceBuffer
     {
         private readonly VkGraphicsDevice _gd;
-        private readonly Vulkan.VkBuffer _deviceBuffer;
+        private readonly VulkanVkBuffer _deviceBuffer;
         private readonly VkMemoryBlock _memory;
         private readonly VkMemoryRequirements _bufferMemoryRequirements;
         public ResourceRefCount RefCount { get; }
@@ -19,7 +20,7 @@ namespace Veldrid.Vk
         public override uint SizeInBytes { get; }
         public override BufferUsage Usage { get; }
 
-        public Vulkan.VkBuffer DeviceBuffer => _deviceBuffer;
+        public VulkanVkBuffer DeviceBuffer => _deviceBuffer;
         public VkMemoryBlock Memory => _memory;
 
         public VkMemoryRequirements BufferMemoryRequirements => _bufferMemoryRequirements;
@@ -30,50 +31,50 @@ namespace Veldrid.Vk
             SizeInBytes = sizeInBytes;
             Usage = usage;
 
-            VkBufferUsageFlags vkUsage = VkBufferUsageFlags.TransferSrc | VkBufferUsageFlags.TransferDst;
+            VkBufferUsageFlags vkUsage = VkBufferUsageFlags.TransferSrcBit | VkBufferUsageFlags.TransferDstBit;
             if ((usage & BufferUsage.VertexBuffer) == BufferUsage.VertexBuffer)
             {
-                vkUsage |= VkBufferUsageFlags.VertexBuffer;
+                vkUsage |= VkBufferUsageFlags.VertexBufferBit;
             }
             if ((usage & BufferUsage.IndexBuffer) == BufferUsage.IndexBuffer)
             {
-                vkUsage |= VkBufferUsageFlags.IndexBuffer;
+                vkUsage |= VkBufferUsageFlags.IndexBufferBit;
             }
             if ((usage & BufferUsage.UniformBuffer) == BufferUsage.UniformBuffer)
             {
-                vkUsage |= VkBufferUsageFlags.UniformBuffer;
+                vkUsage |= VkBufferUsageFlags.UniformBufferBit;
             }
             if ((usage & BufferUsage.StructuredBufferReadWrite) == BufferUsage.StructuredBufferReadWrite
                 || (usage & BufferUsage.StructuredBufferReadOnly) == BufferUsage.StructuredBufferReadOnly)
             {
-                vkUsage |= VkBufferUsageFlags.StorageBuffer;
+                vkUsage |= VkBufferUsageFlags.StorageBufferBit;
             }
             if ((usage & BufferUsage.IndirectBuffer) == BufferUsage.IndirectBuffer)
             {
-                vkUsage |= VkBufferUsageFlags.IndirectBuffer;
+                vkUsage |= VkBufferUsageFlags.IndirectBufferBit;
             }
 
-            VkBufferCreateInfo bufferCI = VkBufferCreateInfo.New();
-            bufferCI.size = sizeInBytes;
-            bufferCI.usage = vkUsage;
-            VkResult result = vkCreateBuffer(gd.Device, ref bufferCI, null, out _deviceBuffer);
+            VkBufferCreateInfo bufferCI = new VkBufferCreateInfo();
+            bufferCI.Size = sizeInBytes;
+            bufferCI.Usage = vkUsage;
+            VkResult result = vk.GetApi().CreateBuffer(gd.Device, ref bufferCI, null, out _deviceBuffer);
             CheckResult(result);
 
             bool prefersDedicatedAllocation;
-            if (_gd.GetBufferMemoryRequirements2 != null)
+            if (false && _gd.GetBufferMemoryRequirements2 != null)
             {
-                VkBufferMemoryRequirementsInfo2KHR memReqInfo2 = VkBufferMemoryRequirementsInfo2KHR.New();
-                memReqInfo2.buffer = _deviceBuffer;
-                VkMemoryRequirements2KHR memReqs2 = VkMemoryRequirements2KHR.New();
-                VkMemoryDedicatedRequirementsKHR dedicatedReqs = VkMemoryDedicatedRequirementsKHR.New();
-                memReqs2.pNext = &dedicatedReqs;
+                VkBufferMemoryRequirementsInfo2KHR memReqInfo2 = new VkBufferMemoryRequirementsInfo2KHR();
+                memReqInfo2.Buffer = _deviceBuffer;
+                VkMemoryRequirements2KHR memReqs2 = new VkMemoryRequirements2KHR();
+                VkMemoryDedicatedRequirementsKHR dedicatedReqs = new VkMemoryDedicatedRequirementsKHR();
+                memReqs2.PNext = &dedicatedReqs;
                 _gd.GetBufferMemoryRequirements2(_gd.Device, &memReqInfo2, &memReqs2);
-                _bufferMemoryRequirements = memReqs2.memoryRequirements;
-                prefersDedicatedAllocation = dedicatedReqs.prefersDedicatedAllocation || dedicatedReqs.requiresDedicatedAllocation;
+                _bufferMemoryRequirements = memReqs2.MemoryRequirements;
+                prefersDedicatedAllocation = dedicatedReqs.PrefersDedicatedAllocation || dedicatedReqs.RequiresDedicatedAllocation;
             }
             else
             {
-                vkGetBufferMemoryRequirements(gd.Device, _deviceBuffer, out _bufferMemoryRequirements);
+                vk.GetApi().GetBufferMemoryRequirements(gd.Device, _deviceBuffer, out _bufferMemoryRequirements);
                 prefersDedicatedAllocation = false;
             }
 
@@ -82,34 +83,34 @@ namespace Veldrid.Vk
 
             VkMemoryPropertyFlags memoryPropertyFlags =
                 hostVisible
-                ? VkMemoryPropertyFlags.HostVisible | VkMemoryPropertyFlags.HostCoherent
-                : VkMemoryPropertyFlags.DeviceLocal;
+                ? VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit
+                : VkMemoryPropertyFlags.DeviceLocalBit;
             if (isStaging)
             {
                 // Use "host cached" memory for staging when available, for better performance of GPU -> CPU transfers
                 var hostCachedAvailable = TryFindMemoryType(
                     gd.PhysicalDeviceMemProperties,
-                    _bufferMemoryRequirements.memoryTypeBits,
-                    memoryPropertyFlags | VkMemoryPropertyFlags.HostCached,
+                    _bufferMemoryRequirements.MemoryTypeBits,
+                    memoryPropertyFlags | VkMemoryPropertyFlags.HostCachedBit,
                     out _);
                 if (hostCachedAvailable)
                 {
-                    memoryPropertyFlags |= VkMemoryPropertyFlags.HostCached;
+                    memoryPropertyFlags |= VkMemoryPropertyFlags.HostCachedBit;
                 }
             }
 
             VkMemoryBlock memoryToken = gd.MemoryManager.Allocate(
                 gd.PhysicalDeviceMemProperties,
-                _bufferMemoryRequirements.memoryTypeBits,
+                _bufferMemoryRequirements.MemoryTypeBits,
                 memoryPropertyFlags,
                 hostVisible,
-                _bufferMemoryRequirements.size,
-                _bufferMemoryRequirements.alignment,
+                _bufferMemoryRequirements.Size,
+                _bufferMemoryRequirements.Alignment,
                 prefersDedicatedAllocation,
-                VkImage.Null,
+                VkNull.VkImageNull,
                 _deviceBuffer);
             _memory = memoryToken;
-            result = vkBindBufferMemory(gd.Device, _deviceBuffer, _memory.DeviceMemory, _memory.Offset);
+            result = vk.GetApi().BindBufferMemory(gd.Device, _deviceBuffer, _memory.DeviceMemory, _memory.Offset);
             CheckResult(result);
 
             RefCount = new ResourceRefCount(DisposeCore);
@@ -135,7 +136,7 @@ namespace Veldrid.Vk
             if (!_destroyed)
             {
                 _destroyed = true;
-                vkDestroyBuffer(_gd.Device, _deviceBuffer, null);
+                vk.GetApi().DestroyBuffer(_gd.Device, _deviceBuffer, null);
                 _gd.MemoryManager.Free(Memory);
             }
         }

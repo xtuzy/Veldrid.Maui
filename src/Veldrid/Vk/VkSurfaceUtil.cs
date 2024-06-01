@@ -1,12 +1,13 @@
-﻿using Vulkan;
-using Vulkan.Xlib;
-using Vulkan.Wayland;
-using static Vulkan.VulkanNative;
+﻿//using Vulkan;
+//using Vulkan.Xlib;
+//using Vulkan.Wayland;
+//using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using Veldrid.Android;
 using System;
 using Veldrid.MetalBindings;
-
+using Silk.NET.Vulkan.Extensions.KHR;
+using Silk.NET.Vulkan.Extensions.MVK;
 namespace Veldrid.Vk
 {
     internal static unsafe class VkSurfaceUtil
@@ -101,41 +102,43 @@ namespace Veldrid.Vk
 
         private static VkSurfaceKHR CreateWin32(VkInstance instance, Win32SwapchainSource win32Source)
         {
-            VkWin32SurfaceCreateInfoKHR surfaceCI = VkWin32SurfaceCreateInfoKHR.New();
-            surfaceCI.hwnd = win32Source.Hwnd;
-            surfaceCI.hinstance = win32Source.Hinstance;
-            VkResult result = vkCreateWin32SurfaceKHR(instance, ref surfaceCI, null, out VkSurfaceKHR surface);
+            VkWin32SurfaceCreateInfoKHR surfaceCI = new VkWin32SurfaceCreateInfoKHR();
+            surfaceCI.Hwnd = win32Source.Hwnd;
+            surfaceCI.Hinstance = win32Source.Hinstance;
+            vk.GetApi().TryGetInstanceExtension(instance, out KhrWin32Surface khrWin32Surface);
+            VkResult result = khrWin32Surface.CreateWin32Surface(instance, ref surfaceCI, null, out VkSurfaceKHR surface);
             CheckResult(result);
             return surface;
         }
 
         private static VkSurfaceKHR CreateXlib(VkInstance instance, XlibSwapchainSource xlibSource)
         {
-            VkXlibSurfaceCreateInfoKHR xsci = VkXlibSurfaceCreateInfoKHR.New();
-            xsci.dpy = (Display*)xlibSource.Display;
-            xsci.window = new Window { Value = xlibSource.Window };
-            VkResult result = vkCreateXlibSurfaceKHR(instance, ref xsci, null, out VkSurfaceKHR surface);
+            VkXlibSurfaceCreateInfoKHR xsci = new VkXlibSurfaceCreateInfoKHR();
+            xsci.Dpy = (nint*)xlibSource.Display;
+            xsci.Window = new Veldrid.Vk.Xlib.Window { Value = xlibSource.Window }.Value;
+            vk.GetApi().TryGetInstanceExtension(instance, out KhrXlibSurface khrXlibSurface);
+            VkResult result = khrXlibSurface.CreateXlibSurface(instance, ref xsci, null, out VkSurfaceKHR surface);
             CheckResult(result);
             return surface;
         }
 
         private static VkSurfaceKHR CreateWayland(VkInstance instance, WaylandSwapchainSource waylandSource)
         {
-            VkWaylandSurfaceCreateInfoKHR wsci = VkWaylandSurfaceCreateInfoKHR.New();
-            wsci.display = (wl_display*)waylandSource.Display;
-            wsci.surface = (wl_surface*)waylandSource.Surface;
-            VkResult result = vkCreateWaylandSurfaceKHR(instance, ref wsci, null, out VkSurfaceKHR surface);
+            VkWaylandSurfaceCreateInfoKHR wsci = new VkWaylandSurfaceCreateInfoKHR();
+            wsci.Display = (nint*)waylandSource.Display;
+            wsci.Surface = (nint*)waylandSource.Surface;
+            vk.GetApi().TryGetInstanceExtension(instance, out KhrWaylandSurface khrWaylandSurface);
+            VkResult result = khrWaylandSurface.CreateWaylandSurface(instance, ref wsci, null, out VkSurfaceKHR surface);
             CheckResult(result);
             return surface;
         }
 
         private static VkSurfaceKHR CreateAndroidSurface(VkInstance instance, AndroidSurfaceSwapchainSource androidSource)
         {
-            IntPtr aNativeWindow = AndroidRuntime.ANativeWindow_fromSurface(androidSource.JniEnv, androidSource.Surface);
-
-            VkAndroidSurfaceCreateInfoKHR androidSurfaceCI = VkAndroidSurfaceCreateInfoKHR.New();
-            androidSurfaceCI.window = (Vulkan.Android.ANativeWindow*)aNativeWindow;
-            VkResult result = vkCreateAndroidSurfaceKHR(instance, ref androidSurfaceCI, null, out VkSurfaceKHR surface);
+            VkAndroidSurfaceCreateInfoKHR androidSurfaceCI = new VkAndroidSurfaceCreateInfoKHR();
+            androidSurfaceCI.Window = (nint*)androidSource.AndroidNativeWindow;
+            vk.GetApi().TryGetInstanceExtension(instance, out KhrAndroidSurface khrAndroidSurface);
+            VkResult result = khrAndroidSurface.CreateAndroidSurface(instance, ref androidSurfaceCI, null, out VkSurfaceKHR surface);
             CheckResult(result);
             return surface;
         }
@@ -169,9 +172,10 @@ namespace Veldrid.Vk
             }
             else
             {
-                VkMacOSSurfaceCreateInfoMVK surfaceCI = VkMacOSSurfaceCreateInfoMVK.New();
-                surfaceCI.pView = contentView.NativePtr.ToPointer();
-                VkResult result = vkCreateMacOSSurfaceMVK(instance, ref surfaceCI, null, out VkSurfaceKHR surface);
+                VkMacOSSurfaceCreateInfoMVK surfaceCI = new VkMacOSSurfaceCreateInfoMVK();
+                surfaceCI.PView = contentView.NativePtr.ToPointer();
+                vk.GetApi().TryGetInstanceExtension(instance, out MvkMacosSurface mvkMacosSurface);
+                VkResult result = mvkMacosSurface.CreateMacOssurface(instance, ref surfaceCI, null, out VkSurfaceKHR surface);
                 CheckResult(result);
                 return surface;
             }
@@ -201,9 +205,10 @@ namespace Veldrid.Vk
             }
             else
             {
-                VkIOSSurfaceCreateInfoMVK surfaceCI = VkIOSSurfaceCreateInfoMVK.New();
-                surfaceCI.pView = uiView.NativePtr.ToPointer();
-                VkResult result = vkCreateIOSSurfaceMVK(instance, ref surfaceCI, null, out VkSurfaceKHR surface);
+                VkIOSSurfaceCreateInfoMVK surfaceCI = new VkIOSSurfaceCreateInfoMVK();
+                surfaceCI.PView = uiView.NativePtr.ToPointer();
+                vk.GetApi().TryGetInstanceExtension(instance, out MvkIosSurface mvkIosSurface);
+                VkResult result = mvkIosSurface.CreateIossurface(instance, ref surfaceCI, null, out VkSurfaceKHR surface);
                 return surface;
             }
         }

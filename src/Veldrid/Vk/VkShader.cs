@@ -1,5 +1,5 @@
-﻿using Vulkan;
-using static Vulkan.VulkanNative;
+﻿//using Vulkan;
+//using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using System;
 
@@ -21,12 +21,12 @@ namespace Veldrid.Vk
         {
             _gd = gd;
 
-            VkShaderModuleCreateInfo shaderModuleCI = VkShaderModuleCreateInfo.New();
+            VkShaderModuleCreateInfo shaderModuleCI = new VkShaderModuleCreateInfo();
             fixed (byte* codePtr = description.ShaderBytes)
             {
-                shaderModuleCI.codeSize = (UIntPtr)description.ShaderBytes.Length;
-                shaderModuleCI.pCode = (uint*)codePtr;
-                VkResult result = vkCreateShaderModule(gd.Device, ref shaderModuleCI, null, out _shaderModule);
+                shaderModuleCI.CodeSize = (UIntPtr)description.ShaderBytes.Length;
+                shaderModuleCI.PCode = (uint*)codePtr;
+                VkResult result = vk.GetApi().CreateShaderModule(gd.Device, ref shaderModuleCI, null, out _shaderModule);
                 CheckResult(result);
             }
         }
@@ -46,7 +46,7 @@ namespace Veldrid.Vk
             if (!_disposed)
             {
                 _disposed = true;
-                vkDestroyShaderModule(_gd.Device, ShaderModule, null);
+                vk.GetApi().DestroyShaderModule(_gd.Device, ShaderModule, null);
             }
         }
     }

@@ -1,5 +1,5 @@
-﻿using Vulkan;
-using static Vulkan.VulkanNative;
+﻿//using Vulkan;
+//using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 
 namespace Veldrid.Vk
@@ -23,7 +23,7 @@ namespace Veldrid.Vk
             : base(ref description)
         {
             _gd = gd;
-            VkDescriptorSetLayoutCreateInfo dslCI = VkDescriptorSetLayoutCreateInfo.New();
+            VkDescriptorSetLayoutCreateInfo dslCI = new VkDescriptorSetLayoutCreateInfo();
             ResourceLayoutElementDescription[] elements = description.Elements;
             _descriptorTypes = new VkDescriptorType[elements.Length];
             VkDescriptorSetLayoutBinding* bindings = stackalloc VkDescriptorSetLayoutBinding[elements.Length];
@@ -38,11 +38,11 @@ namespace Veldrid.Vk
 
             for (uint i = 0; i < elements.Length; i++)
             {
-                bindings[i].binding = i;
-                bindings[i].descriptorCount = 1;
+                bindings[i].Binding = i;
+                bindings[i].DescriptorCount = 1;
                 VkDescriptorType descriptorType = VkFormats.VdToVkDescriptorType(elements[i].Kind, elements[i].Options);
-                bindings[i].descriptorType = descriptorType;
-                bindings[i].stageFlags = VkFormats.VdToVkShaderStages(elements[i].Stages);
+                bindings[i].DescriptorType = descriptorType;
+                bindings[i].StageFlags = VkFormats.VdToVkShaderStages(elements[i].Stages);
                 if ((elements[i].Options & ResourceLayoutElementOptions.DynamicBinding) != 0)
                 {
                     DynamicBufferCount += 1;
@@ -85,10 +85,10 @@ namespace Veldrid.Vk
                 storageBufferDynamicCount,
                 storageImageCount);
 
-            dslCI.bindingCount = (uint)elements.Length;
-            dslCI.pBindings = bindings;
+            dslCI.BindingCount = (uint)elements.Length;
+            dslCI.PBindings = bindings;
 
-            VkResult result = vkCreateDescriptorSetLayout(_gd.Device, ref dslCI, null, out _dsl);
+            VkResult result = vk.GetApi().CreateDescriptorSetLayout(_gd.Device, ref dslCI, null, out _dsl);
             CheckResult(result);
         }
 
@@ -107,7 +107,7 @@ namespace Veldrid.Vk
             if (!_disposed)
             {
                 _disposed = true;
-                vkDestroyDescriptorSetLayout(_gd.Device, _dsl, null);
+                vk.GetApi().DestroyDescriptorSetLayout(_gd.Device, _dsl, null);
             }
         }
     }

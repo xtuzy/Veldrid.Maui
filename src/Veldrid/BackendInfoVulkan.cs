@@ -2,7 +2,7 @@
 using System;
 using System.Collections.ObjectModel;
 using Veldrid.Vk;
-using Vulkan;
+//using Vulkan;
 
 namespace Veldrid
 {
@@ -122,7 +122,7 @@ namespace Veldrid
             for (int i = 0; i < vkProps.Length; i++)
             {
                 VkExtensionProperties prop = vkProps[i];
-                veldridProps[i] = new ExtensionProperties(Util.GetString(prop.extensionName), prop.specVersion);
+                veldridProps[i] = new ExtensionProperties(Util.GetString(prop.ExtensionName), prop.SpecVersion);
             }
 
             return new ReadOnlyCollection<ExtensionProperties>(veldridProps);

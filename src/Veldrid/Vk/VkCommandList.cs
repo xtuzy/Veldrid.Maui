@@ -1,13 +1,11 @@
 ﻿using System;
-using Vulkan;
-using static Vulkan.VulkanNative;
+//using Vulkan;
+//using static Vulkan.VulkanNative;
 using static Veldrid.Vk.VulkanUtil;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Text;
-
-using static Vulkan.RawConstants;
 
 namespace Veldrid.Vk
 {
@@ -64,10 +62,10 @@ namespace Veldrid.Vk
             : base(ref description, gd.Features, gd.UniformBufferMinOffsetAlignment, gd.StructuredBufferMinOffsetAlignment)
         {
             _gd = gd;
-            VkCommandPoolCreateInfo poolCI = VkCommandPoolCreateInfo.New();
-            poolCI.flags = VkCommandPoolCreateFlags.ResetCommandBuffer;
-            poolCI.queueFamilyIndex = gd.GraphicsQueueIndex;
-            VkResult result = vkCreateCommandPool(_gd.Device, ref poolCI, null, out _pool);
+            VkCommandPoolCreateInfo poolCI = new VkCommandPoolCreateInfo();
+            poolCI.Flags = VkCommandPoolCreateFlags.ResetCommandBufferBit;
+            poolCI.QueueFamilyIndex = gd.GraphicsQueueIndex;
+            VkResult result = vk.GetApi().CreateCommandPool(_gd.Device, ref poolCI, null, out _pool);
             CheckResult(result);
 
             _cb = GetNextCommandBuffer();
@@ -81,17 +79,17 @@ namespace Veldrid.Vk
                 if (_availableCommandBuffers.Count > 0)
                 {
                     VkCommandBuffer cachedCB = _availableCommandBuffers.Dequeue();
-                    VkResult resetResult = vkResetCommandBuffer(cachedCB, VkCommandBufferResetFlags.None);
+                    VkResult resetResult = vk.GetApi().ResetCommandBuffer(cachedCB, VkCommandBufferResetFlags.None);
                     CheckResult(resetResult);
                     return cachedCB;
                 }
             }
 
-            VkCommandBufferAllocateInfo cbAI = VkCommandBufferAllocateInfo.New();
-            cbAI.commandPool = _pool;
-            cbAI.commandBufferCount = 1;
-            cbAI.level = VkCommandBufferLevel.Primary;
-            VkResult result = vkAllocateCommandBuffers(_gd.Device, ref cbAI, out VkCommandBuffer cb);
+            VkCommandBufferAllocateInfo cbAI = new VkCommandBufferAllocateInfo();
+            cbAI.CommandPool = _pool;
+            cbAI.CommandBufferCount = 1;
+            cbAI.Level = VkCommandBufferLevel.Primary;
+            VkResult result = vk.GetApi().AllocateCommandBuffers(_gd.Device, ref cbAI, out VkCommandBuffer cb);
             CheckResult(result);
             return cb;
         }
@@ -116,7 +114,7 @@ namespace Veldrid.Vk
                 for (int i = 0; i < _submittedCommandBuffers.Count; i++)
                 {
                     VkCommandBuffer submittedCB = _submittedCommandBuffers[i];
-                    if (submittedCB == completedCB)
+                    if (Compare.IsEqual(submittedCB, completedCB))
                     {
                         _availableCommandBuffers.Enqueue(completedCB);
                         _submittedCommandBuffers.RemoveAt(i);
@@ -156,9 +154,9 @@ namespace Veldrid.Vk
 
             _currentStagingInfo = GetStagingResourceInfo();
 
-            VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.New();
-            beginInfo.flags = VkCommandBufferUsageFlags.OneTimeSubmit;
-            vkBeginCommandBuffer(_cb, ref beginInfo);
+            VkCommandBufferBeginInfo beginInfo = new VkCommandBufferBeginInfo();
+            beginInfo.Flags = VkCommandBufferUsageFlags.OneTimeSubmitBit;
+            vk.GetApi().BeginCommandBuffer(_cb, ref beginInfo);
             _commandBufferBegun = true;
 
             ClearCachedState();
@@ -175,27 +173,27 @@ namespace Veldrid.Vk
         {
             VkClearValue clearValue = new VkClearValue
             {
-                color = new VkClearColorValue(clearColor.R, clearColor.G, clearColor.B, clearColor.A)
+                Color = new VkClearColorValue(clearColor.R, clearColor.G, clearColor.B, clearColor.A)
             };
 
-            if (_activeRenderPass != VkRenderPass.Null)
+            if (Compare.IsNotEqual(_activeRenderPass, VkNull.VkRenderPassNull))
             {
                 VkClearAttachment clearAttachment = new VkClearAttachment
                 {
-                    colorAttachment = index,
-                    aspectMask = VkImageAspectFlags.Color,
-                    clearValue = clearValue
+                    ColorAttachment = index,
+                    AspectMask = VkImageAspectFlags.ColorBit,
+                    ClearValue = clearValue
                 };
 
                 Texture colorTex = _currentFramebuffer.ColorTargets[(int)index].Target;
                 VkClearRect clearRect = new VkClearRect
                 {
-                    baseArrayLayer = 0,
-                    layerCount = 1,
-                    rect = new VkRect2D(0, 0, colorTex.Width, colorTex.Height)
+                    BaseArrayLayer = 0,
+                    LayerCount = 1,
+                    Rect = new VkRect2D(new (0, 0), new(colorTex.Width, colorTex.Height))
                 };
 
-                vkCmdClearAttachments(_cb, 1, ref clearAttachment, 1, ref clearRect);
+                vk.GetApi().CmdClearAttachments(_cb, 1, ref clearAttachment, 1, ref clearRect);
             }
             else
             {
@@ -207,17 +205,17 @@ namespace Veldrid.Vk
 
         private protected override void ClearDepthStencilCore(float depth, byte stencil)
         {
-            VkClearValue clearValue = new VkClearValue { depthStencil = new VkClearDepthStencilValue(depth, stencil) };
+            VkClearValue clearValue = new VkClearValue { DepthStencil = new VkClearDepthStencilValue(depth, stencil) };
 
-            if (_activeRenderPass != VkRenderPass.Null)
+            if (Compare.IsNotEqual(_activeRenderPass, VkNull.VkRenderPassNull))
             {
                 VkImageAspectFlags aspect = FormatHelpers.IsStencilFormat(_currentFramebuffer.DepthTarget.Value.Target.Format)
-                    ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
-                    : VkImageAspectFlags.Depth;
+                    ? VkImageAspectFlags.DepthBit | VkImageAspectFlags.StencilBit
+                    : VkImageAspectFlags.DepthBit;
                 VkClearAttachment clearAttachment = new VkClearAttachment
                 {
-                    aspectMask = aspect,
-                    clearValue = clearValue
+                    AspectMask = aspect,
+                    ClearValue = clearValue
                 };
 
                 uint renderableWidth = _currentFramebuffer.RenderableWidth;
@@ -226,12 +224,12 @@ namespace Veldrid.Vk
                 {
                     VkClearRect clearRect = new VkClearRect
                     {
-                        baseArrayLayer = 0,
-                        layerCount = 1,
-                        rect = new VkRect2D(0, 0, renderableWidth, renderableHeight)
+                        BaseArrayLayer = 0,
+                        LayerCount = 1,
+                        Rect = new VkRect2D(new (0, 0), new(renderableWidth, renderableHeight))
                     };
 
-                    vkCmdClearAttachments(_cb, 1, ref clearAttachment, 1, ref clearRect);
+                    vk.GetApi().CmdClearAttachments(_cb, 1, ref clearAttachment, 1, ref clearRect);
                 }
             }
             else
@@ -244,13 +242,13 @@ namespace Veldrid.Vk
         private protected override void DrawCore(uint vertexCount, uint instanceCount, uint vertexStart, uint instanceStart)
         {
             PreDrawCommand();
-            vkCmdDraw(_cb, vertexCount, instanceCount, vertexStart, instanceStart);
+            vk.GetApi().CmdDraw(_cb, vertexCount, instanceCount, vertexStart, instanceStart);
         }
 
         private protected override void DrawIndexedCore(uint indexCount, uint instanceCount, uint indexStart, int vertexOffset, uint instanceStart)
         {
             PreDrawCommand();
-            vkCmdDrawIndexed(_cb, indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
+            vk.GetApi().CmdDrawIndexed(_cb, indexCount, instanceCount, indexStart, vertexOffset, instanceStart);
         }
 
         protected override void DrawIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
@@ -258,7 +256,7 @@ namespace Veldrid.Vk
             PreDrawCommand();
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
             _currentStagingInfo.Resources.Add(vkBuffer.RefCount);
-            vkCmdDrawIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
+            vk.GetApi().CmdDrawIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
         }
 
         protected override void DrawIndexedIndirectCore(DeviceBuffer indirectBuffer, uint offset, uint drawCount, uint stride)
@@ -266,7 +264,7 @@ namespace Veldrid.Vk
             PreDrawCommand();
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
             _currentStagingInfo.Resources.Add(vkBuffer.RefCount);
-            vkCmdDrawIndexedIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
+            vk.GetApi().CmdDrawIndexedIndirect(_cb, vkBuffer.DeviceBuffer, offset, drawCount, stride);
         }
 
         private void PreDrawCommand()
@@ -330,7 +328,7 @@ namespace Veldrid.Vk
                     if (currentBatchCount != 0)
                     {
                         // Flush current batch.
-                        vkCmdBindDescriptorSets(
+                        vk.GetApi().CmdBindDescriptorSets(
                             _cb,
                             bindPoint,
                             pipelineLayout,
@@ -360,7 +358,7 @@ namespace Veldrid.Vk
         {
             PreDispatchCommand();
 
-            vkCmdDispatch(_cb, groupCountX, groupCountY, groupCountZ);
+            vk.GetApi().CmdDispatch(_cb, groupCountX, groupCountY, groupCountZ);
         }
 
         private void PreDispatchCommand()
@@ -398,12 +396,12 @@ namespace Veldrid.Vk
 
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(indirectBuffer);
             _currentStagingInfo.Resources.Add(vkBuffer.RefCount);
-            vkCmdDispatchIndirect(_cb, vkBuffer.DeviceBuffer, offset);
+            vk.GetApi().CmdDispatchIndirect(_cb, vkBuffer.DeviceBuffer, offset);
         }
 
         protected override void ResolveTextureCore(Texture source, Texture destination)
         {
-            if (_activeRenderPass != VkRenderPass.Null)
+            if (Compare.IsNotEqual(_activeRenderPass, VkNull.VkRenderPassNull))
             {
                 EndCurrentRenderPass();
             }
@@ -413,19 +411,19 @@ namespace Veldrid.Vk
             VkTexture vkDestination = Util.AssertSubtype<Texture, VkTexture>(destination);
             _currentStagingInfo.Resources.Add(vkDestination.RefCount);
             VkImageAspectFlags aspectFlags = ((source.Usage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil)
-                ? VkImageAspectFlags.Depth | VkImageAspectFlags.Stencil
-                : VkImageAspectFlags.Color;
+                ? VkImageAspectFlags.DepthBit | VkImageAspectFlags.StencilBit
+                : VkImageAspectFlags.ColorBit;
             VkImageResolve region = new VkImageResolve
             {
-                extent = new VkExtent3D { width = source.Width, height = source.Height, depth = source.Depth },
-                srcSubresource = new VkImageSubresourceLayers { layerCount = 1, aspectMask = aspectFlags },
-                dstSubresource = new VkImageSubresourceLayers { layerCount = 1, aspectMask = aspectFlags }
+                Extent = new VkExtent3D { Width = source.Width, Height = source.Height, Depth = source.Depth },
+                SrcSubresource = new VkImageSubresourceLayers { LayerCount = 1, AspectMask = aspectFlags },
+                DstSubresource = new VkImageSubresourceLayers { LayerCount = 1, AspectMask = aspectFlags }
             };
 
             vkSource.TransitionImageLayout(_cb, 0, 1, 0, 1, VkImageLayout.TransferSrcOptimal);
             vkDestination.TransitionImageLayout(_cb, 0, 1, 0, 1, VkImageLayout.TransferDstOptimal);
 
-            vkCmdResolveImage(
+            vk.GetApi().CmdResolveImage(
                 _cb,
                 vkSource.OptimalDeviceImage,
                  VkImageLayout.TransferSrcOptimal,
@@ -454,19 +452,19 @@ namespace Veldrid.Vk
             {
                 BeginCurrentRenderPass();
             }
-            if (_activeRenderPass != VkRenderPass.Null)
+            if (Compare.IsNotEqual(_activeRenderPass, VkNull.VkRenderPassNull))
             {
                 EndCurrentRenderPass();
                 _currentFramebuffer.TransitionToFinalLayout(_cb);
             }
 
-            vkEndCommandBuffer(_cb);
+            vk.GetApi().EndCommandBuffer(_cb);
             _submittedCommandBuffers.Add(_cb);
         }
 
         protected override void SetFramebufferCore(Framebuffer fb)
         {
-            if (_activeRenderPass.Handle != VkRenderPass.Null)
+            if (Compare.IsNotEqual(_activeRenderPass, VkNull.VkRenderPassNull))
             {
                 EndCurrentRenderPass();
             }
@@ -501,7 +499,7 @@ namespace Veldrid.Vk
 
         private void EnsureRenderPassActive()
         {
-            if (_activeRenderPass == VkRenderPass.Null)
+            if (Compare.IsEqual(_activeRenderPass, VkNull.VkRenderPassNull))
             {
                 BeginCurrentRenderPass();
             }
@@ -509,7 +507,7 @@ namespace Veldrid.Vk
 
         private void EnsureNoRenderPass()
         {
-            if (_activeRenderPass != VkRenderPass.Null)
+            if (Compare.IsNotEqual(_activeRenderPass, VkNull.VkRenderPassNull))
             {
                 EndCurrentRenderPass();
             }
@@ -517,7 +515,7 @@ namespace Veldrid.Vk
 
         private void BeginCurrentRenderPass()
         {
-            Debug.Assert(_activeRenderPass == VkRenderPass.Null);
+            Debug.Assert(Compare.IsEqual(_activeRenderPass, VkNull.VkRenderPassNull));
             Debug.Assert(_currentFramebuffer != null);
             _currentFramebufferEverActive = true;
 
@@ -537,23 +535,23 @@ namespace Veldrid.Vk
                 }
             }
 
-            VkRenderPassBeginInfo renderPassBI = VkRenderPassBeginInfo.New();
-            renderPassBI.renderArea = new VkRect2D(_currentFramebuffer.RenderableWidth, _currentFramebuffer.RenderableHeight);
-            renderPassBI.framebuffer = _currentFramebuffer.CurrentFramebuffer;
+            VkRenderPassBeginInfo renderPassBI = new VkRenderPassBeginInfo();
+            renderPassBI.RenderArea = new VkRect2D(extent: new (_currentFramebuffer.RenderableWidth, _currentFramebuffer.RenderableHeight));
+            renderPassBI.Framebuffer = _currentFramebuffer.CurrentFramebuffer;
 
             if (!haveAnyAttachments || !haveAllClearValues)
             {
-                renderPassBI.renderPass = _newFramebuffer
+                renderPassBI.RenderPass = _newFramebuffer
                     ? _currentFramebuffer.RenderPassNoClear_Init
                     : _currentFramebuffer.RenderPassNoClear_Load;
-                vkCmdBeginRenderPass(_cb, ref renderPassBI, VkSubpassContents.Inline);
-                _activeRenderPass = renderPassBI.renderPass;
+                vk.GetApi().CmdBeginRenderPass(_cb, ref renderPassBI, VkSubpassContents.Inline);
+                _activeRenderPass = renderPassBI.RenderPass;
 
                 if (haveAnyClearValues)
                 {
                     if (_depthClearValue.HasValue)
                     {
-                        ClearDepthStencilCore(_depthClearValue.Value.depthStencil.depth, (byte)_depthClearValue.Value.depthStencil.stencil);
+                        ClearDepthStencilCore(_depthClearValue.Value.DepthStencil.Depth, (byte)_depthClearValue.Value.DepthStencil.Stencil);
                         _depthClearValue = null;
                     }
 
@@ -564,10 +562,10 @@ namespace Veldrid.Vk
                             _validColorClearValues[i] = false;
                             VkClearValue vkClearValue = _clearValues[i];
                             RgbaFloat clearColor = new RgbaFloat(
-                                vkClearValue.color.float32_0,
-                                vkClearValue.color.float32_1,
-                                vkClearValue.color.float32_2,
-                                vkClearValue.color.float32_3);
+                                vkClearValue.Color.Float32_0,
+                                vkClearValue.Color.Float32_1,
+                                vkClearValue.Color.Float32_2,
+                                vkClearValue.Color.Float32_3);
                             ClearColorTarget(i, clearColor);
                         }
                     }
@@ -576,17 +574,17 @@ namespace Veldrid.Vk
             else
             {
                 // We have clear values for every attachment.
-                renderPassBI.renderPass = _currentFramebuffer.RenderPassClear;
+                renderPassBI.RenderPass = _currentFramebuffer.RenderPassClear;
                 fixed (VkClearValue* clearValuesPtr = &_clearValues[0])
                 {
-                    renderPassBI.clearValueCount = attachmentCount;
-                    renderPassBI.pClearValues = clearValuesPtr;
+                    renderPassBI.ClearValueCount = attachmentCount;
+                    renderPassBI.PClearValues = clearValuesPtr;
                     if (_depthClearValue.HasValue)
                     {
                         _clearValues[_currentFramebuffer.ColorTargets.Count] = _depthClearValue.Value;
                         _depthClearValue = null;
                     }
-                    vkCmdBeginRenderPass(_cb, ref renderPassBI, VkSubpassContents.Inline);
+                    vk.GetApi().CmdBeginRenderPass(_cb, ref renderPassBI, VkSubpassContents.Inline);
                     _activeRenderPass = _currentFramebuffer.RenderPassClear;
                     Util.ClearArray(_validColorClearValues);
                 }
@@ -597,17 +595,17 @@ namespace Veldrid.Vk
 
         private void EndCurrentRenderPass()
         {
-            Debug.Assert(_activeRenderPass != VkRenderPass.Null);
-            vkCmdEndRenderPass(_cb);
+            Debug.Assert(Compare.IsNotEqual(_activeRenderPass, VkNull.VkRenderPassNull));
+            vk.GetApi().CmdEndRenderPass(_cb);
             _currentFramebuffer.TransitionToIntermediateLayout(_cb);
-            _activeRenderPass = VkRenderPass.Null;
+            _activeRenderPass = VkNull.VkRenderPassNull;
 
             // Place a barrier between RenderPasses, so that color / depth outputs
             // can be read in subsequent passes.
-            vkCmdPipelineBarrier(
+            vk.GetApi().CmdPipelineBarrier(
                 _cb,
-                VkPipelineStageFlags.BottomOfPipe,
-                VkPipelineStageFlags.TopOfPipe,
+                VkPipelineStageFlags.BottomOfPipeBit,
+                VkPipelineStageFlags.TopOfPipeBit,
                 VkDependencyFlags.None,
                 0,
                 null,
@@ -620,16 +618,16 @@ namespace Veldrid.Vk
         private protected override void SetVertexBufferCore(uint index, DeviceBuffer buffer, uint offset)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
-            Vulkan.VkBuffer deviceBuffer = vkBuffer.DeviceBuffer;
+            VulkanVkBuffer deviceBuffer = vkBuffer.DeviceBuffer;
             ulong offset64 = offset;
-            vkCmdBindVertexBuffers(_cb, index, 1, ref deviceBuffer, ref offset64);
+            vk.GetApi().CmdBindVertexBuffers(_cb, index, 1, ref deviceBuffer, ref offset64);
             _currentStagingInfo.Resources.Add(vkBuffer.RefCount);
         }
 
         private protected override void SetIndexBufferCore(DeviceBuffer buffer, IndexFormat format, uint offset)
         {
             VkBuffer vkBuffer = Util.AssertSubtype<DeviceBuffer, VkBuffer>(buffer);
-            vkCmdBindIndexBuffer(_cb, vkBuffer.DeviceBuffer, offset, VkFormats.VdToVkIndexFormat(format));
+            vk.GetApi().CmdBindIndexBuffer(_cb, vkBuffer.DeviceBuffer, offset, VkFormats.VdToVkIndexFormat(format));
             _currentStagingInfo.Resources.Add(vkBuffer.RefCount);
         }
 
@@ -641,7 +639,7 @@ namespace Veldrid.Vk
                 Util.EnsureArrayMinimumSize(ref _currentGraphicsResourceSets, vkPipeline.ResourceSetCount);
                 ClearSets(_currentGraphicsResourceSets);
                 Util.EnsureArrayMinimumSize(ref _graphicsResourceSetsChanged, vkPipeline.ResourceSetCount);
-                vkCmdBindPipeline(_cb, VkPipelineBindPoint.Graphics, vkPipeline.DevicePipeline);
+                vk.GetApi().CmdBindPipeline(_cb, VkPipelineBindPoint.Graphics, vkPipeline.DevicePipeline);
                 _currentGraphicsPipeline = vkPipeline;
             }
             else if (pipeline.IsComputePipeline && _currentComputePipeline != pipeline)
@@ -649,7 +647,7 @@ namespace Veldrid.Vk
                 Util.EnsureArrayMinimumSize(ref _currentComputeResourceSets, vkPipeline.ResourceSetCount);
                 ClearSets(_currentComputeResourceSets);
                 Util.EnsureArrayMinimumSize(ref _computeResourceSetsChanged, vkPipeline.ResourceSetCount);
-                vkCmdBindPipeline(_cb, VkPipelineBindPoint.Compute, vkPipeline.DevicePipeline);
+                vk.GetApi().CmdBindPipeline(_cb, VkPipelineBindPoint.Compute, vkPipeline.DevicePipeline);
                 _currentComputePipeline = vkPipeline;
             }
 
@@ -691,11 +689,11 @@ namespace Veldrid.Vk
         {
             if (index == 0 || _gd.Features.MultipleViewports)
             {
-                VkRect2D scissor = new VkRect2D((int)x, (int)y, (int)width, (int)height);
-                if (_scissorRects[index] != scissor)
+                VkRect2D scissor = new VkRect2D(new((int)x, (int)y), new(width, height));
+                if (Compare.IsNotEqual(_scissorRects[index], scissor))
                 {
                     _scissorRects[index] = scissor;
-                    vkCmdSetScissor(_cb, index, 1, ref scissor);
+                    vk.GetApi().CmdSetScissor(_cb, index, 1, ref scissor);
                 }
             }
         }
@@ -713,15 +711,15 @@ namespace Veldrid.Vk
 
                 VkViewport vkViewport = new VkViewport
                 {
-                    x = viewport.X,
-                    y = vpY,
-                    width = viewport.Width,
-                    height = vpHeight,
-                    minDepth = viewport.MinDepth,
-                    maxDepth = viewport.MaxDepth
+                    X = viewport.X,
+                    Y = vpY,
+                    Width = viewport.Width,
+                    Height = vpHeight,
+                    MinDepth = viewport.MinDepth,
+                    MaxDepth = viewport.MaxDepth
                 };
 
-                vkCmdSetViewport(_cb, index, 1, ref vkViewport);
+                vk.GetApi().CmdSetViewport(_cb, index, 1, ref vkViewport);
             }
         }
 
@@ -748,27 +746,27 @@ namespace Veldrid.Vk
 
             VkBufferCopy region = new VkBufferCopy
             {
-                srcOffset = sourceOffset,
-                dstOffset = destinationOffset,
-                size = sizeInBytes
+                SrcOffset = sourceOffset,
+                DstOffset = destinationOffset,
+                Size = sizeInBytes
             };
 
-            vkCmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, 1, ref region);
+            vk.GetApi().CmdCopyBuffer(_cb, srcVkBuffer.DeviceBuffer, dstVkBuffer.DeviceBuffer, 1, ref region);
 
             bool needToProtectUniform = destination.Usage.HasFlag(BufferUsage.UniformBuffer);
 
             VkMemoryBarrier barrier;
-            barrier.sType = VkStructureType.MemoryBarrier;
-            barrier.srcAccessMask = VkAccessFlags.TransferWrite;
-            barrier.dstAccessMask = needToProtectUniform ? VkAccessFlags.UniformRead : VkAccessFlags.VertexAttributeRead;
-            barrier.pNext = null;
-            vkCmdPipelineBarrier(
+            barrier.SType = VkStructureType.MemoryBarrier;
+            barrier.SrcAccessMask = VkAccessFlags.TransferWriteBit;
+            barrier.DstAccessMask = needToProtectUniform ? VkAccessFlags.UniformReadBit : VkAccessFlags.VertexAttributeReadBit;
+            barrier.PNext = null;
+            vk.GetApi().CmdPipelineBarrier(
                 _cb,
-                VkPipelineStageFlags.Transfer, needToProtectUniform ?
-                    VkPipelineStageFlags.VertexShader | VkPipelineStageFlags.ComputeShader |
-                    VkPipelineStageFlags.FragmentShader | VkPipelineStageFlags.GeometryShader |
-                    VkPipelineStageFlags.TessellationControlShader | VkPipelineStageFlags.TessellationEvaluationShader
-                    : VkPipelineStageFlags.VertexInput,
+                VkPipelineStageFlags.TransferBit, needToProtectUniform ?
+                    VkPipelineStageFlags.VertexShaderBit | VkPipelineStageFlags.ComputeShaderBit |
+                    VkPipelineStageFlags.FragmentShaderBit | VkPipelineStageFlags.GeometryShaderBit |
+                    VkPipelineStageFlags.TessellationControlShaderBit | VkPipelineStageFlags.TessellationEvaluationShaderBit
+                    : VkPipelineStageFlags.VertexInputBit,
                 VkDependencyFlags.None,
                 1, ref barrier,
                 0, null,
@@ -823,27 +821,27 @@ namespace Veldrid.Vk
             {
                 VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
                 {
-                    aspectMask = VkImageAspectFlags.Color,
-                    layerCount = layerCount,
-                    mipLevel = srcMipLevel,
-                    baseArrayLayer = srcBaseArrayLayer
+                    AspectMask = VkImageAspectFlags.ColorBit,
+                    LayerCount = layerCount,
+                    MipLevel = srcMipLevel,
+                    BaseArrayLayer = srcBaseArrayLayer
                 };
 
                 VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers
                 {
-                    aspectMask = VkImageAspectFlags.Color,
-                    layerCount = layerCount,
-                    mipLevel = dstMipLevel,
-                    baseArrayLayer = dstBaseArrayLayer
+                    AspectMask = VkImageAspectFlags.ColorBit,
+                    LayerCount = layerCount,
+                    MipLevel = dstMipLevel,
+                    BaseArrayLayer = dstBaseArrayLayer
                 };
 
                 VkImageCopy region = new VkImageCopy
                 {
-                    srcOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY, z = (int)srcZ },
-                    dstOffset = new VkOffset3D { x = (int)dstX, y = (int)dstY, z = (int)dstZ },
-                    srcSubresource = srcSubresource,
-                    dstSubresource = dstSubresource,
-                    extent = new VkExtent3D { width = width, height = height, depth = depth }
+                    SrcOffset = new VkOffset3D { X = (int)srcX, Y = (int)srcY, Z = (int)srcZ },
+                    DstOffset = new VkOffset3D { X = (int)dstX, Y = (int)dstY, Z = (int)dstZ },
+                    SrcSubresource = srcSubresource,
+                    DstSubresource = dstSubresource,
+                    Extent = new VkExtent3D { Width = width, Height = height, Depth = depth }
                 };
 
                 srcVkTexture.TransitionImageLayout(
@@ -862,7 +860,7 @@ namespace Veldrid.Vk
                     layerCount,
                     VkImageLayout.TransferDstOptimal);
 
-                vkCmdCopyImage(
+                vk.GetApi().CmdCopyImage(
                     cb,
                     srcVkTexture.OptimalDeviceImage,
                     VkImageLayout.TransferSrcOptimal,
@@ -895,7 +893,7 @@ namespace Veldrid.Vk
             }
             else if (sourceIsStaging && !destIsStaging)
             {
-                Vulkan.VkBuffer srcBuffer = srcVkTexture.StagingBuffer;
+                VulkanVkBuffer srcBuffer = srcVkTexture.StagingBuffer;
                 VkSubresourceLayout srcLayout = srcVkTexture.GetSubresourceLayout(
                     srcVkTexture.CalculateSubresource(srcMipLevel, srcBaseArrayLayer));
                 VkImage dstImage = dstVkTexture.OptimalDeviceImage;
@@ -909,10 +907,10 @@ namespace Veldrid.Vk
 
                 VkImageSubresourceLayers dstSubresource = new VkImageSubresourceLayers
                 {
-                    aspectMask = VkImageAspectFlags.Color,
-                    layerCount = layerCount,
-                    mipLevel = dstMipLevel,
-                    baseArrayLayer = dstBaseArrayLayer
+                    AspectMask = VkImageAspectFlags.ColorBit,
+                    LayerCount = layerCount,
+                    MipLevel = dstMipLevel,
+                    BaseArrayLayer = dstBaseArrayLayer
                 };
 
                 Util.GetMipDimensions(srcVkTexture, srcMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
@@ -932,18 +930,18 @@ namespace Veldrid.Vk
 
                 VkBufferImageCopy regions = new VkBufferImageCopy
                 {
-                    bufferOffset = srcLayout.offset
+                    BufferOffset = srcLayout.Offset
                         + (srcZ * depthPitch)
                         + (compressedY * rowPitch)
                         + (compressedX * blockSizeInBytes),
-                    bufferRowLength = bufferRowLength,
-                    bufferImageHeight = bufferImageHeight,
-                    imageExtent = new VkExtent3D { width = copyWidth, height = copyheight, depth = depth },
-                    imageOffset = new VkOffset3D { x = (int)dstX, y = (int)dstY, z = (int)dstZ },
-                    imageSubresource = dstSubresource
+                    BufferRowLength = bufferRowLength,
+                    BufferImageHeight = bufferImageHeight,
+                    ImageExtent = new VkExtent3D { Width = copyWidth, Height = copyheight, Depth = depth },
+                    ImageOffset = new VkOffset3D { X = (int)dstX, Y = (int)dstY, Z = (int)dstZ },
+                    ImageSubresource = dstSubresource
                 };
 
-                vkCmdCopyBufferToImage(cb, srcBuffer, dstImage, VkImageLayout.TransferDstOptimal, 1, ref regions);
+                vk.GetApi().CmdCopyBufferToImage(cb, srcBuffer, dstImage, VkImageLayout.TransferDstOptimal, 1, ref regions);
 
                 if ((dstVkTexture.Usage & TextureUsage.Sampled) != 0)
                 {
@@ -967,11 +965,11 @@ namespace Veldrid.Vk
                     layerCount,
                     VkImageLayout.TransferSrcOptimal);
 
-                Vulkan.VkBuffer dstBuffer = dstVkTexture.StagingBuffer;
+                VulkanVkBuffer dstBuffer = dstVkTexture.StagingBuffer;
 
                 VkImageAspectFlags aspect = (srcVkTexture.Usage & TextureUsage.DepthStencil) != 0
-                    ? VkImageAspectFlags.Depth
-                    : VkImageAspectFlags.Color;
+                    ? VkImageAspectFlags.DepthBit
+                    : VkImageAspectFlags.ColorBit;
 
                 Util.GetMipDimensions(dstVkTexture, dstMipLevel, out uint mipWidth, out uint mipHeight, out uint mipDepth);
                 uint blockSize = FormatHelpers.IsCompressedFormat(srcVkTexture.Format) ? 4u : 1u;
@@ -993,29 +991,29 @@ namespace Veldrid.Vk
 
                     VkImageSubresourceLayers srcSubresource = new VkImageSubresourceLayers
                     {
-                        aspectMask = aspect,
-                        layerCount = 1,
-                        mipLevel = srcMipLevel,
-                        baseArrayLayer = srcBaseArrayLayer + layer
+                        AspectMask = aspect,
+                        LayerCount = 1,
+                        MipLevel = srcMipLevel,
+                        BaseArrayLayer = srcBaseArrayLayer + layer
                     };
 
                     VkBufferImageCopy region = new VkBufferImageCopy
                     {
-                        bufferRowLength = bufferRowLength,
-                        bufferImageHeight = bufferImageHeight,
-                        bufferOffset = dstLayout.offset
+                        BufferRowLength = bufferRowLength,
+                        BufferImageHeight = bufferImageHeight,
+                        BufferOffset = dstLayout.Offset
                             + (dstZ * depthPitch)
                             + (compressedDstY * rowPitch)
                             + (compressedDstX * blockSizeInBytes),
-                        imageExtent = new VkExtent3D { width = width, height = height, depth = depth },
-                        imageOffset = new VkOffset3D { x = (int)srcX, y = (int)srcY, z = (int)srcZ },
-                        imageSubresource = srcSubresource
+                        ImageExtent = new VkExtent3D { Width = width, Height = height, Depth = depth },
+                        ImageOffset = new VkOffset3D { X = (int)srcX, Y = (int)srcY, Z = (int)srcZ },
+                        ImageSubresource = srcSubresource
                     };
 
                     layers[layer] = region;
                 }
 
-                vkCmdCopyImageToBuffer(cb, srcImage, VkImageLayout.TransferSrcOptimal, dstBuffer, layerCount, layers);
+                vk.GetApi().CmdCopyImageToBuffer(cb, srcImage, VkImageLayout.TransferSrcOptimal, dstBuffer, layerCount, layers);
 
                 if ((srcVkTexture.Usage & TextureUsage.Sampled) != 0)
                 {
@@ -1031,10 +1029,10 @@ namespace Veldrid.Vk
             else
             {
                 Debug.Assert(sourceIsStaging && destIsStaging);
-                Vulkan.VkBuffer srcBuffer = srcVkTexture.StagingBuffer;
+                VulkanVkBuffer srcBuffer = srcVkTexture.StagingBuffer;
                 VkSubresourceLayout srcLayout = srcVkTexture.GetSubresourceLayout(
                     srcVkTexture.CalculateSubresource(srcMipLevel, srcBaseArrayLayer));
-                Vulkan.VkBuffer dstBuffer = dstVkTexture.StagingBuffer;
+                VulkanVkBuffer dstBuffer = dstVkTexture.StagingBuffer;
                 VkSubresourceLayout dstLayout = dstVkTexture.GetSubresourceLayout(
                     dstVkTexture.CalculateSubresource(dstMipLevel, dstBaseArrayLayer));
 
@@ -1048,18 +1046,18 @@ namespace Veldrid.Vk
                         {
                             VkBufferCopy region = new VkBufferCopy
                             {
-                                srcOffset = srcLayout.offset
-                                    + srcLayout.depthPitch * (zz + srcZ)
-                                    + srcLayout.rowPitch * (yy + srcY)
+                                SrcOffset = srcLayout.Offset
+                                    + srcLayout.DepthPitch * (zz + srcZ)
+                                    + srcLayout.RowPitch * (yy + srcY)
                                     + pixelSize * srcX,
-                                dstOffset = dstLayout.offset
-                                    + dstLayout.depthPitch * (zz + dstZ)
-                                    + dstLayout.rowPitch * (yy + dstY)
+                                DstOffset = dstLayout.Offset
+                                    + dstLayout.DepthPitch * (zz + dstZ)
+                                    + dstLayout.RowPitch * (yy + dstY)
                                     + pixelSize * dstX,
-                                size = width * pixelSize,
+                                Size = width * pixelSize,
                             };
 
-                            vkCmdCopyBuffer(cb, srcBuffer, dstBuffer, 1, ref region);
+                            vk.GetApi().CmdCopyBuffer(cb, srcBuffer, dstBuffer, 1, ref region);
                         }
                     }
                 }
@@ -1079,18 +1077,18 @@ namespace Veldrid.Vk
                         {
                             VkBufferCopy region = new VkBufferCopy
                             {
-                                srcOffset = srcLayout.offset
-                                    + srcLayout.depthPitch * (zz + srcZ)
-                                    + srcLayout.rowPitch * (row + compressedSrcY)
+                                SrcOffset = srcLayout.Offset
+                                    + srcLayout.DepthPitch * (zz + srcZ)
+                                    + srcLayout.RowPitch * (row + compressedSrcY)
                                     + blockSizeInBytes * compressedSrcX,
-                                dstOffset = dstLayout.offset
-                                    + dstLayout.depthPitch * (zz + dstZ)
-                                    + dstLayout.rowPitch * (row + compressedDstY)
+                                DstOffset = dstLayout.Offset
+                                    + dstLayout.DepthPitch * (zz + dstZ)
+                                    + dstLayout.RowPitch * (row + compressedDstY)
                                     + blockSizeInBytes * compressedDstX,
-                                size = denseRowSize,
+                                Size = denseRowSize,
                             };
 
-                            vkCmdCopyBuffer(cb, srcBuffer, dstBuffer, 1, ref region);
+                            vk.GetApi().CmdCopyBuffer(cb, srcBuffer, dstBuffer, 1, ref region);
                         }
                     }
 
@@ -1125,27 +1123,33 @@ namespace Veldrid.Vk
                 uint mipHeight = Math.Max(height >> 1, 1);
                 uint mipDepth = Math.Max(depth >> 1, 1);
 
-                region.srcSubresource = new VkImageSubresourceLayers
+                region.SrcSubresource = new VkImageSubresourceLayers
                 {
-                    aspectMask = VkImageAspectFlags.Color,
-                    baseArrayLayer = 0,
-                    layerCount = layerCount,
-                    mipLevel = level - 1
+                    AspectMask = VkImageAspectFlags.ColorBit,
+                    BaseArrayLayer = 0,
+                    LayerCount = layerCount,
+                    MipLevel = level - 1
                 };
-                region.srcOffsets_0 = new VkOffset3D();
-                region.srcOffsets_1 = new VkOffset3D { x = (int)width, y = (int)height, z = (int)depth };
-                region.dstOffsets_0 = new VkOffset3D();
-
-                region.dstSubresource = new VkImageSubresourceLayers
+                region.SrcOffsets = new SrcOffsetsBuffer
                 {
-                    aspectMask = VkImageAspectFlags.Color,
-                    baseArrayLayer = 0,
-                    layerCount = layerCount,
-                    mipLevel = level
+                    Element0 = new VkOffset3D(),
+                    Element1 = new VkOffset3D { X = (int)width, Y = (int)height, Z = (int)depth }
+                };
+                region.DstOffsets = new DstOffsetsBuffer()
+                {
+                    Element0 = new VkOffset3D()
                 };
 
-                region.dstOffsets_1 = new VkOffset3D { x = (int)mipWidth, y = (int)mipHeight, z = (int)mipDepth };
-                vkCmdBlitImage(
+                region.DstSubresource = new VkImageSubresourceLayers
+                {
+                    AspectMask = VkImageAspectFlags.ColorBit,
+                    BaseArrayLayer = 0,
+                    LayerCount = layerCount,
+                    MipLevel = level
+                };
+
+                region.DstOffsets.Element1 = new VkOffset3D { X = (int)mipWidth, Y = (int)mipHeight, Z = (int)mipDepth };
+                vk.GetApi().CmdBlitImage(
                     _cb,
                     deviceImage, VkImageLayout.TransferSrcOptimal,
                     deviceImage, VkImageLayout.TransferDstOptimal,
@@ -1166,42 +1170,42 @@ namespace Veldrid.Vk
         [Conditional("DEBUG")]
         private void DebugFullPipelineBarrier()
         {
-            VkMemoryBarrier memoryBarrier = VkMemoryBarrier.New();
-            memoryBarrier.srcAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT |
-                   VK_ACCESS_INDEX_READ_BIT |
-                   VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT |
-                   VK_ACCESS_UNIFORM_READ_BIT |
-                   VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
-                   VK_ACCESS_SHADER_READ_BIT |
-                   VK_ACCESS_SHADER_WRITE_BIT |
-                   VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
-                   VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
-                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
-                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT |
-                   VK_ACCESS_TRANSFER_READ_BIT |
-                   VK_ACCESS_TRANSFER_WRITE_BIT |
-                   VK_ACCESS_HOST_READ_BIT |
-                   VK_ACCESS_HOST_WRITE_BIT;
-            memoryBarrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT |
-                   VK_ACCESS_INDEX_READ_BIT |
-                   VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT |
-                   VK_ACCESS_UNIFORM_READ_BIT |
-                   VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
-                   VK_ACCESS_SHADER_READ_BIT |
-                   VK_ACCESS_SHADER_WRITE_BIT |
-                   VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
-                   VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
-                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
-                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT |
-                   VK_ACCESS_TRANSFER_READ_BIT |
-                   VK_ACCESS_TRANSFER_WRITE_BIT |
-                   VK_ACCESS_HOST_READ_BIT |
-                   VK_ACCESS_HOST_WRITE_BIT;
+            VkMemoryBarrier memoryBarrier = new VkMemoryBarrier();
+            memoryBarrier.SrcAccessMask = AccessFlags.AccessIndirectCommandReadBit |
+                   AccessFlags.AccessIndexReadBit |
+                   AccessFlags.AccessVertexAttributeReadBit |
+                   AccessFlags.AccessUniformReadBit |
+                   AccessFlags.AccessInputAttachmentReadBit |
+                   AccessFlags.AccessShaderReadBit |
+                   AccessFlags.AccessShaderWriteBit |
+                   AccessFlags.AccessColorAttachmentReadBit |
+                   AccessFlags.AccessColorAttachmentWriteBit |
+                   AccessFlags.AccessDepthStencilAttachmentReadBit |
+                   AccessFlags.AccessDepthStencilAttachmentWriteBit |
+                   AccessFlags.AccessTransferReadBit |
+                   AccessFlags.AccessTransferWriteBit |
+                   AccessFlags.AccessHostReadBit |
+                   AccessFlags.AccessHostWriteBit;
+            memoryBarrier.DstAccessMask = AccessFlags.AccessIndirectCommandReadBit |
+                   AccessFlags.AccessIndexReadBit |
+                   AccessFlags.AccessVertexAttributeReadBit |
+                   AccessFlags.AccessUniformReadBit |
+                   AccessFlags.AccessInputAttachmentReadBit |
+                   AccessFlags.AccessShaderReadBit |
+                   AccessFlags.AccessShaderWriteBit |
+                   AccessFlags.AccessColorAttachmentReadBit |
+                   AccessFlags.AccessColorAttachmentWriteBit |
+                   AccessFlags.AccessDepthStencilAttachmentReadBit |
+                   AccessFlags.AccessDepthStencilAttachmentWriteBit |
+                   AccessFlags.AccessTransferReadBit |
+                   AccessFlags.AccessTransferWriteBit |
+                   AccessFlags.AccessHostReadBit |
+                   AccessFlags.AccessHostWriteBit;
 
-            vkCmdPipelineBarrier(
+            vk.GetApi().CmdPipelineBarrier(
                 _cb,
-                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // srcStageMask
-                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, // dstStageMask
+                PipelineStageFlags.PipelineStageAllCommandsBit, // srcStageMask
+                PipelineStageFlags.PipelineStageAllCommandsBit, // dstStageMask
                 VkDependencyFlags.None,
                 1,                                  // memoryBarrierCount
                 &memoryBarrier,                     // pMemoryBarriers
@@ -1249,7 +1253,7 @@ namespace Veldrid.Vk
             vkCmdDebugMarkerBeginEXT_t func = _gd.MarkerBegin;
             if (func == null) { return; }
 
-            VkDebugMarkerMarkerInfoEXT markerInfo = VkDebugMarkerMarkerInfoEXT.New();
+            VkDebugMarkerMarkerInfoEXT markerInfo = new VkDebugMarkerMarkerInfoEXT();
 
             int byteCount = Encoding.UTF8.GetByteCount(name);
             byte* utf8Ptr = stackalloc byte[byteCount + 1];
@@ -1259,7 +1263,7 @@ namespace Veldrid.Vk
             }
             utf8Ptr[byteCount] = 0;
 
-            markerInfo.pMarkerName = utf8Ptr;
+            markerInfo.PMarkerName = utf8Ptr;
 
             func(_cb, &markerInfo);
         }
@@ -1277,7 +1281,7 @@ namespace Veldrid.Vk
             vkCmdDebugMarkerInsertEXT_t func = _gd.MarkerInsert;
             if (func == null) { return; }
 
-            VkDebugMarkerMarkerInfoEXT markerInfo = VkDebugMarkerMarkerInfoEXT.New();
+            VkDebugMarkerMarkerInfoEXT markerInfo = new VkDebugMarkerMarkerInfoEXT();
 
             int byteCount = Encoding.UTF8.GetByteCount(name);
             byte* utf8Ptr = stackalloc byte[byteCount + 1];
@@ -1287,7 +1291,7 @@ namespace Veldrid.Vk
             }
             utf8Ptr[byteCount] = 0;
 
-            markerInfo.pMarkerName = utf8Ptr;
+            markerInfo.PMarkerName = utf8Ptr;
 
             func(_cb, &markerInfo);
         }
@@ -1302,7 +1306,7 @@ namespace Veldrid.Vk
             if (!_destroyed)
             {
                 _destroyed = true;
-                vkDestroyCommandPool(_gd.Device, _pool, null);
+                vk.GetApi().DestroyCommandPool(_gd.Device, _pool, null);
 
                 Debug.Assert(_submittedStagingInfos.Count == 0);
 

@@ -1,23 +1,23 @@
-﻿using Vulkan;
-using static Vulkan.VulkanNative;
+﻿//using Vulkan;
+//using static Vulkan.VulkanNative;
 
 namespace Veldrid.Vk
 {
     internal unsafe class VkFence : Fence
     {
         private readonly VkGraphicsDevice _gd;
-        private Vulkan.VkFence _fence;
+        private VulkanVkFence _fence;
         private string _name;
         private bool _destroyed;
 
-        public Vulkan.VkFence DeviceFence => _fence;
+        public VulkanVkFence DeviceFence => _fence;
 
         public VkFence(VkGraphicsDevice gd, bool signaled)
         {
             _gd = gd;
-            VkFenceCreateInfo fenceCI = VkFenceCreateInfo.New();
-            fenceCI.flags = signaled ? VkFenceCreateFlags.Signaled : VkFenceCreateFlags.None;
-            VkResult result = vkCreateFence(_gd.Device, ref fenceCI, null, out _fence);
+            VkFenceCreateInfo fenceCI = new VkFenceCreateInfo();
+            fenceCI.Flags = signaled ? VkFenceCreateFlags.SignaledBit : VkFenceCreateFlags.None;
+            VkResult result = vk.GetApi().CreateFence(_gd.Device, ref fenceCI, null, out _fence);
             VulkanUtil.CheckResult(result);
         }
 
@@ -26,7 +26,7 @@ namespace Veldrid.Vk
             _gd.ResetFence(this);
         }
 
-        public override bool Signaled => vkGetFenceStatus(_gd.Device, _fence) == VkResult.Success;
+        public override bool Signaled => vk.GetApi().GetFenceStatus(_gd.Device, _fence) == VkResult.Success;
         public override bool IsDisposed => _destroyed;
 
         public override string Name
@@ -42,7 +42,7 @@ namespace Veldrid.Vk
         {
             if (!_destroyed)
             {
-                vkDestroyFence(_gd.Device, _fence, null);
+                vk.GetApi().DestroyFence(_gd.Device, _fence, null);
                 _destroyed = true;
             }
         }

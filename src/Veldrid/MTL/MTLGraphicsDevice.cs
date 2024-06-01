@@ -531,9 +531,11 @@ namespace Veldrid.MTL
             bool result = false;
             try
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                    || RuntimeInformation.IsOSPlatform(OSPlatform.Create("iOS")) // on iphone and maccatalyst return true
+                    || RuntimeInformation.IsOSPlatform(OSPlatform.Create("MacCatalyst"))) // on maccatalyst return true
                 {
-                    if (RuntimeInformation.OSDescription.Contains("Darwin"))
+                    if (RuntimeInformation.OSDescription.Contains("Darwin") && (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Create("MacCatalyst")))) //check Microsoft.iOS.dll, iOS not support AllDevices api
                     {
                         NSArray allDevices = MTLDevice.MTLCopyAllDevices();
                         result |= (ulong)allDevices.count > 0;

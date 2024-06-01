@@ -1,9 +1,10 @@
 ﻿using System;
-using Vulkan;
-using Vulkan.Xlib;
+//using Vulkan;
+//using Vulkan.Xlib;
 using static Veldrid.Vk.VulkanUtil;
-using static Vulkan.VulkanNative;
-
+//using static Vulkan.VulkanNative;
+using Silk.NET.Vulkan.Extensions.KHR;
+using Silk.NET.Vulkan.Extensions.EXT;
 namespace Veldrid.Vk
 {
     /// <summary>
@@ -33,7 +34,7 @@ namespace Veldrid.Vk
         /// <param name="display">A pointer to the Xlib Display.</param>
         /// <param name="window">An Xlib window.</param>
         /// <returns>A new VkSurfaceSource.</returns>
-        public unsafe static VkSurfaceSource CreateXlib(Display* display, Window window) => new XlibVkSurfaceInfo(display, window);
+        public unsafe static VkSurfaceSource CreateXlib(Veldrid.Vk.Xlib.Display* display, Veldrid.Vk.Xlib.Window window) => new XlibVkSurfaceInfo(display, window);
 
         internal abstract SwapchainSource GetSurfaceSource();
     }
@@ -62,10 +63,10 @@ namespace Veldrid.Vk
 
     internal class XlibVkSurfaceInfo : VkSurfaceSource
     {
-        private readonly unsafe Display* _display;
-        private readonly Window _window;
+        private readonly unsafe Veldrid.Vk.Xlib.Display* _display;
+        private readonly Veldrid.Vk.Xlib.Window _window;
 
-        public unsafe XlibVkSurfaceInfo(Display* display, Window window)
+        public unsafe XlibVkSurfaceInfo(Veldrid.Vk.Xlib.Display* display, Veldrid.Vk.Xlib.Window window)
         {
             _display = display;
             _window = window;

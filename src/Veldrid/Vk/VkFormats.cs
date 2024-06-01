@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Vulkan;
+//using Vulkan;
 
 namespace Veldrid.Vk
 {
@@ -85,23 +85,23 @@ namespace Veldrid.Vk
         {
             VkImageUsageFlags vkUsage = VkImageUsageFlags.None;
 
-            vkUsage = VkImageUsageFlags.TransferDst | VkImageUsageFlags.TransferSrc;
+            vkUsage = VkImageUsageFlags.TransferDstBit | VkImageUsageFlags.TransferSrcBit;
             bool isDepthStencil = (vdUsage & TextureUsage.DepthStencil) == TextureUsage.DepthStencil;
             if ((vdUsage & TextureUsage.Sampled) == TextureUsage.Sampled)
             {
-                vkUsage |= VkImageUsageFlags.Sampled;
+                vkUsage |= VkImageUsageFlags.SampledBit;
             }
             if (isDepthStencil)
             {
-                vkUsage |= VkImageUsageFlags.DepthStencilAttachment;
+                vkUsage |= VkImageUsageFlags.DepthStencilAttachmentBit;
             }
             if ((vdUsage & TextureUsage.RenderTarget) == TextureUsage.RenderTarget)
             {
-                vkUsage |= VkImageUsageFlags.ColorAttachment;
+                vkUsage |= VkImageUsageFlags.ColorAttachmentBit;
             }
             if ((vdUsage & TextureUsage.Storage) == TextureUsage.Storage)
             {
-                vkUsage |= VkImageUsageFlags.Storage;
+                vkUsage |= VkImageUsageFlags.StorageBit;
             }
 
             return vkUsage;
@@ -112,11 +112,11 @@ namespace Veldrid.Vk
             switch (type)
             {
                 case TextureType.Texture1D:
-                    return VkImageType.Image1D;
+                    return VkImageType.ImageType1D;
                 case TextureType.Texture2D:
-                    return VkImageType.Image2D;
+                    return VkImageType.ImageType2D;
                 case TextureType.Texture3D:
-                    return VkImageType.Image3D;
+                    return VkImageType.ImageType3D;
                 default:
                     throw Illegal.Value<TextureType>();
             }
@@ -148,17 +148,17 @@ namespace Veldrid.Vk
             switch (sampleCount)
             {
                 case TextureSampleCount.Count1:
-                    return VkSampleCountFlags.Count1;
+                    return VkSampleCountFlags.Count1Bit;
                 case TextureSampleCount.Count2:
-                    return VkSampleCountFlags.Count2;
+                    return VkSampleCountFlags.Count2Bit;
                 case TextureSampleCount.Count4:
-                    return VkSampleCountFlags.Count4;
+                    return VkSampleCountFlags.Count4Bit;
                 case TextureSampleCount.Count8:
-                    return VkSampleCountFlags.Count8;
+                    return VkSampleCountFlags.Count8Bit;
                 case TextureSampleCount.Count16:
-                    return VkSampleCountFlags.Count16;
+                    return VkSampleCountFlags.Count16Bit;
                 case TextureSampleCount.Count32:
-                    return VkSampleCountFlags.Count32;
+                    return VkSampleCountFlags.Count32Bit;
                 default:
                     throw Illegal.Value<TextureSampleCount>();
             }
@@ -207,9 +207,9 @@ namespace Veldrid.Vk
             switch (cullMode)
             {
                 case FaceCullMode.Back:
-                    return VkCullModeFlags.Back;
+                    return VkCullModeFlags.BackBit;
                 case FaceCullMode.Front:
-                    return VkCullModeFlags.Front;
+                    return VkCullModeFlags.FrontBit;
                 case FaceCullMode.None:
                     return VkCullModeFlags.None;
                 default:
@@ -241,13 +241,13 @@ namespace Veldrid.Vk
             VkColorComponentFlags flags = VkColorComponentFlags.None;
 
             if ((mask & ColorWriteMask.Red) == ColorWriteMask.Red)
-                flags |= VkColorComponentFlags.R;
+                flags |= VkColorComponentFlags.RBit;
             if ((mask & ColorWriteMask.Green) == ColorWriteMask.Green)
-                flags |= VkColorComponentFlags.G;
+                flags |= VkColorComponentFlags.GBit;
             if ((mask & ColorWriteMask.Blue) == ColorWriteMask.Blue)
-                flags |= VkColorComponentFlags.B;
+                flags |= VkColorComponentFlags.BBit;
             if ((mask & ColorWriteMask.Alpha) == ColorWriteMask.Alpha)
-                flags |= VkColorComponentFlags.A;
+                flags |= VkColorComponentFlags.ABit;
 
             return flags;
         }
@@ -338,65 +338,65 @@ namespace Veldrid.Vk
                 case VertexElementFormat.Float1:
                     return VkFormat.R32Sfloat;
                 case VertexElementFormat.Float2:
-                    return VkFormat.R32g32Sfloat;
+                    return VkFormat.R32G32Sfloat;
                 case VertexElementFormat.Float3:
-                    return VkFormat.R32g32b32Sfloat;
+                    return VkFormat.R32G32B32Sfloat;
                 case VertexElementFormat.Float4:
-                    return VkFormat.R32g32b32a32Sfloat;
+                    return VkFormat.R32G32B32A32Sfloat;
                 case VertexElementFormat.Byte2_Norm:
-                    return VkFormat.R8g8Unorm;
+                    return VkFormat.R8G8Unorm;
                 case VertexElementFormat.Byte2:
-                    return VkFormat.R8g8Uint;
+                    return VkFormat.R8G8Uint;
                 case VertexElementFormat.Byte4_Norm:
-                    return VkFormat.R8g8b8a8Unorm;
+                    return VkFormat.R8G8B8A8Unorm;
                 case VertexElementFormat.Byte4:
-                    return VkFormat.R8g8b8a8Uint;
+                    return VkFormat.R8G8B8A8Uint;
                 case VertexElementFormat.SByte2_Norm:
-                    return VkFormat.R8g8Snorm;
+                    return VkFormat.R8G8SNorm;
                 case VertexElementFormat.SByte2:
-                    return VkFormat.R8g8Sint;
+                    return VkFormat.R8G8Sint;
                 case VertexElementFormat.SByte4_Norm:
-                    return VkFormat.R8g8b8a8Snorm;
+                    return VkFormat.R8G8B8A8SNorm;
                 case VertexElementFormat.SByte4:
-                    return VkFormat.R8g8b8a8Sint;
+                    return VkFormat.R8G8B8A8Sint;
                 case VertexElementFormat.UShort2_Norm:
-                    return VkFormat.R16g16Unorm;
+                    return VkFormat.R16G16Unorm;
                 case VertexElementFormat.UShort2:
-                    return VkFormat.R16g16Uint;
+                    return VkFormat.R16G16Uint;
                 case VertexElementFormat.UShort4_Norm:
-                    return VkFormat.R16g16b16a16Unorm;
+                    return VkFormat.R16G16B16A16Unorm;
                 case VertexElementFormat.UShort4:
-                    return VkFormat.R16g16b16a16Uint;
+                    return VkFormat.R16G16B16A16Uint;
                 case VertexElementFormat.Short2_Norm:
-                    return VkFormat.R16g16Snorm;
+                    return VkFormat.R16G16SNorm;
                 case VertexElementFormat.Short2:
-                    return VkFormat.R16g16Sint;
+                    return VkFormat.R16G16Sint;
                 case VertexElementFormat.Short4_Norm:
-                    return VkFormat.R16g16b16a16Snorm;
+                    return VkFormat.R16G16B16A16SNorm;
                 case VertexElementFormat.Short4:
-                    return VkFormat.R16g16b16a16Sint;
+                    return VkFormat.R16G16B16A16Sint;
                 case VertexElementFormat.UInt1:
                     return VkFormat.R32Uint;
                 case VertexElementFormat.UInt2:
-                    return VkFormat.R32g32Uint;
+                    return VkFormat.R32G32Uint;
                 case VertexElementFormat.UInt3:
-                    return VkFormat.R32g32b32Uint;
+                    return VkFormat.R32G32B32Uint;
                 case VertexElementFormat.UInt4:
-                    return VkFormat.R32g32b32a32Uint;
+                    return VkFormat.R32G32B32A32Uint;
                 case VertexElementFormat.Int1:
                     return VkFormat.R32Sint;
                 case VertexElementFormat.Int2:
-                    return VkFormat.R32g32Sint;
+                    return VkFormat.R32G32Sint;
                 case VertexElementFormat.Int3:
-                    return VkFormat.R32g32b32Sint;
+                    return VkFormat.R32G32B32Sint;
                 case VertexElementFormat.Int4:
-                    return VkFormat.R32g32b32a32Sint;
+                    return VkFormat.R32G32B32A32Sint;
                 case VertexElementFormat.Half1:
                     return VkFormat.R16Sfloat;
                 case VertexElementFormat.Half2:
-                    return VkFormat.R16g16Sfloat;
+                    return VkFormat.R16G16Sfloat;
                 case VertexElementFormat.Half4:
-                    return VkFormat.R16g16b16a16Sfloat;
+                    return VkFormat.R16G16B16A16Sfloat;
                 default:
                     throw Illegal.Value<VertexElementFormat>();
             }
@@ -407,22 +407,22 @@ namespace Veldrid.Vk
             VkShaderStageFlags ret = VkShaderStageFlags.None;
 
             if ((stage & ShaderStages.Vertex) == ShaderStages.Vertex)
-                ret |= VkShaderStageFlags.Vertex;
+                ret |= VkShaderStageFlags.VertexBit;
 
             if ((stage & ShaderStages.Geometry) == ShaderStages.Geometry)
-                ret |= VkShaderStageFlags.Geometry;
+                ret |= VkShaderStageFlags.GeometryBit;
 
             if ((stage & ShaderStages.TessellationControl) == ShaderStages.TessellationControl)
-                ret |= VkShaderStageFlags.TessellationControl;
+                ret |= VkShaderStageFlags.TessellationControlBit;
 
             if ((stage & ShaderStages.TessellationEvaluation) == ShaderStages.TessellationEvaluation)
-                ret |= VkShaderStageFlags.TessellationEvaluation;
+                ret |= VkShaderStageFlags.TessellationEvaluationBit;
 
             if ((stage & ShaderStages.Fragment) == ShaderStages.Fragment)
-                ret |= VkShaderStageFlags.Fragment;
+                ret |= VkShaderStageFlags.FragmentBit;
 
             if ((stage & ShaderStages.Compute) == ShaderStages.Compute)
-                ret |= VkShaderStageFlags.Compute;
+                ret |= VkShaderStageFlags.ComputeBit;
 
             return ret;
         }
@@ -486,7 +486,7 @@ namespace Veldrid.Vk
             {
                 case VkFormat.R8Unorm:
                     return PixelFormat.R8_UNorm;
-                case VkFormat.R8Snorm:
+                case VkFormat.R8SNorm:
                     return PixelFormat.R8_SNorm;
                 case VkFormat.R8Uint:
                     return PixelFormat.R8_UInt;
@@ -495,7 +495,7 @@ namespace Veldrid.Vk
 
                 case VkFormat.R16Unorm:
                     return PixelFormat.R16_UNorm;
-                case VkFormat.R16Snorm:
+                case VkFormat.R16SNorm:
                     return PixelFormat.R16_SNorm;
                 case VkFormat.R16Uint:
                     return PixelFormat.R16_UInt;
@@ -512,100 +512,100 @@ namespace Veldrid.Vk
                 case VkFormat.D32Sfloat:
                     return PixelFormat.R32_Float;
 
-                case VkFormat.R8g8Unorm:
+                case VkFormat.R8G8Unorm:
                     return PixelFormat.R8_G8_UNorm;
-                case VkFormat.R8g8Snorm:
+                case VkFormat.R8G8SNorm:
                     return PixelFormat.R8_G8_SNorm;
-                case VkFormat.R8g8Uint:
+                case VkFormat.R8G8Uint:
                     return PixelFormat.R8_G8_UInt;
-                case VkFormat.R8g8Sint:
+                case VkFormat.R8G8Sint:
                     return PixelFormat.R8_G8_SInt;
 
-                case VkFormat.R16g16Unorm:
+                case VkFormat.R16G16Unorm:
                     return PixelFormat.R16_G16_UNorm;
-                case VkFormat.R16g16Snorm:
+                case VkFormat.R16G16SNorm:
                     return PixelFormat.R16_G16_SNorm;
-                case VkFormat.R16g16Uint:
+                case VkFormat.R16G16Uint:
                     return PixelFormat.R16_G16_UInt;
-                case VkFormat.R16g16Sint:
+                case VkFormat.R16G16Sint:
                     return PixelFormat.R16_G16_SInt;
-                case VkFormat.R16g16Sfloat:
+                case VkFormat.R16G16Sfloat:
                     return PixelFormat.R16_G16_Float;
 
-                case VkFormat.R32g32Uint:
+                case VkFormat.R32G32Uint:
                     return PixelFormat.R32_G32_UInt;
-                case VkFormat.R32g32Sint:
+                case VkFormat.R32G32Sint:
                     return PixelFormat.R32_G32_SInt;
-                case VkFormat.R32g32Sfloat:
+                case VkFormat.R32G32Sfloat:
                     return PixelFormat.R32_G32_Float;
 
-                case VkFormat.R8g8b8a8Unorm:
+                case VkFormat.R8G8B8A8Unorm:
                     return PixelFormat.R8_G8_B8_A8_UNorm;
-                case VkFormat.R8g8b8a8Srgb:
+                case VkFormat.R8G8B8A8Srgb:
                     return PixelFormat.R8_G8_B8_A8_UNorm_SRgb;
-                case VkFormat.B8g8r8a8Unorm:
+                case VkFormat.B8G8R8A8Unorm:
                     return PixelFormat.B8_G8_R8_A8_UNorm;
-                case VkFormat.B8g8r8a8Srgb:
+                case VkFormat.B8G8R8A8Srgb:
                     return PixelFormat.B8_G8_R8_A8_UNorm_SRgb;
-                case VkFormat.R8g8b8a8Snorm:
+                case VkFormat.R8G8B8A8SNorm:
                     return PixelFormat.R8_G8_B8_A8_SNorm;
-                case VkFormat.R8g8b8a8Uint:
+                case VkFormat.R8G8B8A8Uint:
                     return PixelFormat.R8_G8_B8_A8_UInt;
-                case VkFormat.R8g8b8a8Sint:
+                case VkFormat.R8G8B8A8Sint:
                     return PixelFormat.R8_G8_B8_A8_SInt;
 
-                case VkFormat.R16g16b16a16Unorm:
+                case VkFormat.R16G16B16A16Unorm:
                     return PixelFormat.R16_G16_B16_A16_UNorm;
-                case VkFormat.R16g16b16a16Snorm:
+                case VkFormat.R16G16B16A16SNorm:
                     return PixelFormat.R16_G16_B16_A16_SNorm;
-                case VkFormat.R16g16b16a16Uint:
+                case VkFormat.R16G16B16A16Uint:
                     return PixelFormat.R16_G16_B16_A16_UInt;
-                case VkFormat.R16g16b16a16Sint:
+                case VkFormat.R16G16B16A16Sint:
                     return PixelFormat.R16_G16_B16_A16_SInt;
-                case VkFormat.R16g16b16a16Sfloat:
+                case VkFormat.R16G16B16A16Sfloat:
                     return PixelFormat.R16_G16_B16_A16_Float;
 
-                case VkFormat.R32g32b32a32Uint:
+                case VkFormat.R32G32B32A32Uint:
                     return PixelFormat.R32_G32_B32_A32_UInt;
-                case VkFormat.R32g32b32a32Sint:
+                case VkFormat.R32G32B32A32Sint:
                     return PixelFormat.R32_G32_B32_A32_SInt;
-                case VkFormat.R32g32b32a32Sfloat:
+                case VkFormat.R32G32B32A32Sfloat:
                     return PixelFormat.R32_G32_B32_A32_Float;
 
-                case VkFormat.Bc1RgbUnormBlock:
+                case VkFormat.BC1RgbUnormBlock:
                     return PixelFormat.BC1_Rgb_UNorm;
-                case VkFormat.Bc1RgbSrgbBlock:
+                case VkFormat.BC1RgbSrgbBlock:
                     return PixelFormat.BC1_Rgb_UNorm_SRgb;
-                case VkFormat.Bc1RgbaUnormBlock:
+                case VkFormat.BC1RgbaUnormBlock:
                     return PixelFormat.BC1_Rgba_UNorm;
-                case VkFormat.Bc1RgbaSrgbBlock:
+                case VkFormat.BC1RgbaSrgbBlock:
                     return PixelFormat.BC1_Rgba_UNorm_SRgb;
-                case VkFormat.Bc2UnormBlock:
+                case VkFormat.BC2UnormBlock:
                     return PixelFormat.BC2_UNorm;
-                case VkFormat.Bc2SrgbBlock:
+                case VkFormat.BC2SrgbBlock:
                     return PixelFormat.BC2_UNorm_SRgb;
-                case VkFormat.Bc3UnormBlock:
+                case VkFormat.BC3UnormBlock:
                     return PixelFormat.BC3_UNorm;
-                case VkFormat.Bc3SrgbBlock:
+                case VkFormat.BC3SrgbBlock:
                     return PixelFormat.BC3_UNorm_SRgb;
-                case VkFormat.Bc4UnormBlock:
+                case VkFormat.BC4UnormBlock:
                     return PixelFormat.BC4_UNorm;
-                case VkFormat.Bc4SnormBlock:
+                case VkFormat.BC4SNormBlock:
                     return PixelFormat.BC4_SNorm;
-                case VkFormat.Bc5UnormBlock:
+                case VkFormat.BC5UnormBlock:
                     return PixelFormat.BC5_UNorm;
-                case VkFormat.Bc5SnormBlock:
+                case VkFormat.BC5SNormBlock:
                     return PixelFormat.BC5_SNorm;
-                case VkFormat.Bc7UnormBlock:
+                case VkFormat.BC7UnormBlock:
                     return PixelFormat.BC7_UNorm;
-                case VkFormat.Bc7SrgbBlock:
+                case VkFormat.BC7SrgbBlock:
                     return PixelFormat.BC7_UNorm_SRgb;
 
-                case VkFormat.A2b10g10r10UnormPack32:
+                case VkFormat.A2B10G10R10UnormPack32:
                     return PixelFormat.R10_G10_B10_A2_UNorm;
-                case VkFormat.A2b10g10r10UintPack32:
+                case VkFormat.A2B10G10R10UintPack32:
                     return PixelFormat.R10_G10_B10_A2_UInt;
-                case VkFormat.B10g11r11UfloatPack32:
+                case VkFormat.B10G11R11UfloatPack32:
                     return PixelFormat.R11_G11_B10_Float;
 
                 default:
