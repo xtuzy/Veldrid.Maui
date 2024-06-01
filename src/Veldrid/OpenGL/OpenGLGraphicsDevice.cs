@@ -411,10 +411,7 @@ namespace Veldrid.OpenGL
             }
             else if (source is AndroidSurfaceSwapchainSource androidSource)
             {
-                IntPtr aNativeWindow = Android.AndroidRuntime.ANativeWindow_fromSurface(
-                    androidSource.JniEnv,
-                    androidSource.Surface);
-                InitializeANativeWindow(options, aNativeWindow, swapchainDescription);
+                InitializeANativeWindow(options, androidSource.AndroidNativeWindow, swapchainDescription);
             }
             else
             {

@@ -161,11 +161,16 @@ namespace Veldrid
     {
         public IntPtr Surface { get; }
         public IntPtr JniEnv { get; }
+        /// <summary>
+        /// When i use Vulkan backend, in Veldrid.Vk load android.so will fail, so i load it at here.
+        /// </summary>
+        public IntPtr AndroidNativeWindow { get; }
 
         public AndroidSurfaceSwapchainSource(IntPtr surfaceHandle, IntPtr jniEnv)
         {
             Surface = surfaceHandle;
             JniEnv = jniEnv;
+            AndroidNativeWindow = Veldrid.Android.AndroidRuntime.ANativeWindow_fromSurface(jniEnv, surfaceHandle);
         }
     }
 
