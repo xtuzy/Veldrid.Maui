@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.RenderDoc", "Veldri
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Veldrid.SDL2", "Veldrid.SDL2\Veldrid.SDL2.csproj", "{7494932D-EEDC-4B80-934C-02570961D4A0}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MauiDemo", "MauiDemo\MauiDemo.csproj", "{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -127,6 +129,30 @@ Global
 		{7494932D-EEDC-4B80-934C-02570961D4A0}.Release|x64.Build.0 = Release|Any CPU
 		{7494932D-EEDC-4B80-934C-02570961D4A0}.Release|x86.ActiveCfg = Release|Any CPU
 		{7494932D-EEDC-4B80-934C-02570961D4A0}.Release|x86.Build.0 = Release|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Debug|ARM.Build.0 = Debug|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Debug|ARM.Deploy.0 = Debug|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Debug|x64.Build.0 = Debug|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Debug|x64.Deploy.0 = Debug|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Debug|x86.Build.0 = Debug|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Debug|x86.Deploy.0 = Debug|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Release|ARM.ActiveCfg = Release|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Release|ARM.Build.0 = Release|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Release|ARM.Deploy.0 = Release|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Release|x64.ActiveCfg = Release|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Release|x64.Build.0 = Release|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Release|x64.Deploy.0 = Release|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Release|x86.ActiveCfg = Release|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Release|x86.Build.0 = Release|Any CPU
+		{3F341E5E-A1BA-4B10-BF10-A23899A9B33D}.Release|x86.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
