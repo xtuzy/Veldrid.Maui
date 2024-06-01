@@ -85,7 +85,7 @@ namespace Veldrid.MTL
                 if (!CAMetalLayer.TryCast(_uiView.layer, out _metalLayer))
                 {
                     _metalLayer = CAMetalLayer.New();
-                    _metalLayer.frame = _uiView.frame;
+                    _metalLayer.frame = new CGRect(new (0, 0), _uiView.frame.size);//frame is relative to superLayer, see https://stackoverflow.com/questions/26977861/swift-uiview-frame-is-not-equal-to-uiview-layer-frame
                     _metalLayer.opaque = true;
                     _uiView.layer.addSublayer(_metalLayer.NativePtr);
                 }
