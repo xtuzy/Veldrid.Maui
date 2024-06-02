@@ -56,7 +56,7 @@
     <RootNamespace>Veldrid</RootNamespace>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>Veldrid.Maui</PackageId>
-    <Version>4.9.1</Version>
+    <Version>4.9.3-beta1</Version>
   </PropertyGroup>
 
   <Import Project="..\Veldrid.OpenGLBindings\Veldrid.OpenGLBindings.projitems" Label="Shared" />
